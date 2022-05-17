@@ -1,0 +1,3 @@
+# Info on SCAP Tailoring Files
+
+These provided tailoring files are for demonstration only, they *MUST* be recreated and tested in your org. They are not tested or currently used by LANL. Use these demo files at your own risk...
