@@ -1,0 +1,23 @@
+# build process requirements
+pip
+wheel
+setuptools
+flake8 
+bandit
+black
+pandas
+pytest
+pyinstaller
+# application requirements
+rich
+distro
+psutil
+lxml
+netifaces
+cryptography
+python3-nmap
+pytest-shutil
+pyndiff
+deepdiff
+json2xml
+xmldiff
