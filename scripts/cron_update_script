@@ -1,0 +1,9 @@
+#!/bin/bash
+# cron.daily script to keep the rpm up to date via yum
+# ************ Update with YOUR yum repos if not using default-enabled repos ************
+/bin/yum clean all
+/bin/yum makecache
+/bin/yum update -y rhelhostinfo
+# otherwise could be:
+#/bin/yum --enablerepo=<YOUR REPO HERE> makecache
+#/bin/yum update -y --enablerepo=<YOUR REPO HERE> rhelhostinfo
