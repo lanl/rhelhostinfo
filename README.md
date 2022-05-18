@@ -13,8 +13,8 @@ to enumerate security-relevant information about the host and the surrounding ne
 
 # Objective
 <pre>
-rhelhostinfo primarily provides passive host inventory and detection via the --checkconfig option 
-and active host inventory and detection on an IPv4 /24 network segment via the --scan option. 
+rhelhostinfo primarily provides passive host inventory and change detection via the --checkconfig option 
+and active host inventory and change detection on an IPv4 /24 network segment via the --scan option. 
 Additionally, the application provides enumeration of Red Hat host configuration vulnerabilities via the Lynis --lynis 
 option and DISA STIG evaluation and/or remediation via the openscap project with tailoring files that can be edited for 
 organizational needs. rhelhostinfo provides an easy mechanism and architecture to deploy python scripting across an enterprise's 
