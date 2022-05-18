@@ -70,7 +70,6 @@ optional arguments:
 ├── app
 │   ├── __init__.py
 │   ├── rhelhostinfo.py
-│   ├── rhelhostlist.py
 │   ├── rhelsknr.py
 │   ├── key.key
 │   ├── log.conf
