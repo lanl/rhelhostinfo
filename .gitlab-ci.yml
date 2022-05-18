@@ -1,0 +1,322 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+
+variables:
+  MAJ_VERSION: "1"
+  MIN_VERSION: "0"
+  YOUR_APP_NAME: "rhelhostinfo"
+  YOUR_APP_COMMAND: "rhelhostinfo"
+  YOUR_HOST: "yourhost.example.com"
+  YOUR_USER_NAME: "ENTER HERE"
+  YOUR_PERSONAL_EMAIL: "ENTER HERE"
+  YOUR_GIT_REPO: "https://github.com/lanl/rhelhostinfo.git"
+  ### Note: you also need to create the access tokens for the recursive commits to work: "CI_ACCESS_TOKEN" && "CI_TOKEN_PASS" ###
+
+stages:
+- sast
+- test
+- build
+- commit
+### need to add the deploy stage, i.e. to scp your rpm to your yum server...
+#- deploy
+
+sast:
+  stage: sast
+include:
+- template: Security/SAST.gitlab-ci.yml
+- template: Security/Dependency-Scanning.gitlab-ci.yml
+- template: Security/License-Scanning.gitlab-ci.yml
+- template: Security/Secret-Detection.gitlab-ci.yml
+# these are the default gitlab tools
+
+bandit:
+  stage: sast
+  image: python:latest
+  allow_failure: true
+  before_script:
+  - rm -f $CI_PROJECT_DIR/sast/bandit_improvements.txt
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade bandit
+  script:
+  - python3 -m bandit -r $CI_PROJECT_DIR -l -i -x $CI_PROJECT_DIR/venv -f txt --output
+    $CI_PROJECT_DIR/sast/bandit_improvements.txt -s B101 --exit-zero
+  artifacts:
+    when: always
+    paths:
+    - "$CI_PROJECT_DIR/sast/bandit_improvements.txt"
+    expire_in: 1 day
+  except:
+    - tags
+
+flake8:
+  stage: sast
+  image: python:latest
+  allow_failure: true
+  before_script:
+  - rm -f $CI_PROJECT_DIR/sast/flake8_improvements.txt
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade flake8
+  script:
+  - python3 -m flake8 --max-line-length=79 $CI_PROJECT_DIR --exclude venv --output-file $CI_PROJECT_DIR/sast/flake8_improvements.txt
+  artifacts:
+    when: always
+    paths:
+    - "$CI_PROJECT_DIR/sast/flake8_improvements.txt"
+    expire_in: 1 day
+  except:
+    - tags
+
+pytest_output:
+  stage: sast
+  image: python:latest
+  allow_failure: true
+  before_script:
+  - rm -f $CI_PROJECT_DIR/sast/pytest_improvements.txt
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv mesa
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade pytest
+  - mkdir -p $CI_PROJECT_DIR/sast
+  script:
+  - python3 -m pytest $CI_PROJECT_DIR/pytest/test_*.py | tee $CI_PROJECT_DIR/sast/pytest_improvements.txt
+  artifacts:
+    when: always
+    paths:
+    - "$CI_PROJECT_DIR/sast/pytest_improvements.txt"
+    expire_in: 1 day
+  except:
+    - tags
+
+pytest_reports:
+  stage: sast
+  image: python:latest
+  allow_failure: true
+  before_script:
+  - rm -f $CI_PROJECT_DIR/sast/report.xml
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv mesa
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade pytest
+  script:
+  - python3 -m pytest $CI_PROJECT_DIR/pytest/test_*.py --junitxml=$CI_PROJECT_DIR/sast/report.xml
+  artifacts:
+    when: always
+    paths:
+    - "$CI_PROJECT_DIR/sast/report.xml"
+    reports:
+      junit: "$CI_PROJECT_DIR/sast/report.xml"
+    expire_in: 1 day
+  except:
+    - tags
+
+black:
+  stage: sast
+  image: python:latest
+  allow_failure: true
+  before_script:
+  - rm -f $CI_PROJECT_DIR/sast/black.txt
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv mesa
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade black black[jupyter]
+  script:
+  - BLACKDIFF=$(python3 -m black --line-length=79 $CI_PROJECT_DIR --diff)
+  - echo "$BLACKDIFF" >> $CI_PROJECT_DIR/sast/black.txt
+  - python3 -m black --line-length=79 $CI_PROJECT_DIR
+  artifacts:
+    paths:
+    - $CI_PROJECT_DIR/sast/black.txt
+    - $CI_PROJECT_DIR/*.py
+    - $CI_PROJECT_DIR/app/*.py
+    expire_in: 1 day
+  except:
+    - tags
+
+shellcheck:
+  stage: sast
+  image: koalaman/shellcheck-alpine
+  allow_failure: true
+  before_script:
+  - rm -f $CI_PROJECT_DIR/sast/shellcheck.txt
+  script:
+  - shellcheck $CI_PROJECT_DIR/scripts/*.sh | tee $CI_PROJECT_DIR/sast/shellcheck.txt
+  artifacts:
+    paths:
+    - $CI_PROJECT_DIR/sast/shellcheck.txt
+    expire_in: 1 day
+  except:
+    - tags
+    
+bandit_failure_test:
+  stage: test
+  image: python:latest
+  allow_failure: true ### need to change for Prod
+  before_script:
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade bandit
+  script:
+  - python3 -m bandit -r $CI_PROJECT_DIR  -ll -ii -x $CI_PROJECT_DIR/venv -s B602,B605
+  except:
+    - tags
+
+pytest_test_code:
+  stage: test
+  image: python:latest
+  allow_failure: true ### need to change for Prod
+  before_script:
+  - python3 -V
+  - python3 -m pip install --upgrade virtualenv
+  - python3 -m virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade pytest
+  script:
+  - python3 -m pytest $CI_PROJECT_DIR/pytest/test_*.py
+  except:
+    - tags
+
+shellcheck_failure_test:
+  stage: test
+  image: koalaman/shellcheck-alpine
+  allow_failure: false
+  script:
+  - shellcheck $CI_PROJECT_DIR/scripts/*.sh
+  except:
+    - tags
+
+rpmbuild_7.9:
+  stage: build
+  image: centos:centos7
+  before_script:
+  - yum install -y wget openssl-devel bzip2-devel libffi-devel gcc python3-devel gobject-introspection-devel cairo-gobject-devel upx
+  - yum groupinstall -y "Development Tools"
+  - yum install -y zlib-devel libcmocka-devel sqlite-devel
+  - yum install -y rpm-build rpmdevtools openssl-devel freetype-devel nmap
+  - yum update -y
+  - rpmdev-setuptree
+  - if grep -q "TEST_GUI" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/TEST_GUI/${YOUR_APP_NAME}/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - if grep -q "define version 1" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/define version 1/define version ${MAJ_VERSION}/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - if grep -q "define release 1" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/define release 1/define release ${MIN_VERSION}.$(date +%Y%m%d%H)/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - if grep -q "define app test_gui" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/define app test_gui/define app ${YOUR_APP_COMMAND}/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - wget https://www.python.org/ftp/python/3.9.5/Python-3.9.5.tgz
+  - tar xvf Python-3.9.5.tgz
+  - cd Python-3.9*/
+  - ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
+    --enable-loadable-sqlite-extensions
+  - make altinstall
+  - cd $CI_PROJECT_DIR
+  - alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.9 3
+  - alternatives --set python3 /usr/local/bin/python3.9
+  - /usr/local/bin/python3.9 -m venv venv
+  - source venv/bin/activate
+  - python3 -m pip install --upgrade pip 
+  - python3 -m pip install --upgrade wheel
+  - python3 -m pip install --upgrade setuptools python-dev-tools xcffib
+  - python3 -m pip install cairocffi tornado 
+  - python3 -m pip install --upgrade -r requirements.txt
+  - cp -R $CI_PROJECT_DIR/* /root/rpmbuild/SOURCES/
+  - rm -rf /root/rpmbuild/SOURCES/sast
+  - rm -rf /root/rpmbuild/SOURCES/pytest
+  script:
+  - rpmbuild -bb -vv --clean /root/rpmbuild/SOURCES/rpmbuild/rhelhostinfo.spec --define "_rpmdir $CI_PROJECT_DIR/current_rpms/"
+  artifacts:
+    when: on_success
+    paths:
+    - $CI_PROJECT_DIR/current_rpms/x86_64/${YOUR_APP_NAME}-${MAJ_VERSION}-${MIN_VERSION}.$(date +%Y%m%d%H).el7.x86_64.rpm
+    expire_in: 1 day
+  only:
+    - triggers
+    - schedules
+  needs:
+    - black
+    - bandit_failure_test
+    - pytest_test_code
+    - shellcheck_failure_test
+
+rpmbuild_latest_8:
+  stage: build
+  image: rockylinux:latest
+  before_script:
+  - yum groupinstall -y "Development Tools"
+  - yum install -y gcc
+  - yum install -y openssl-devel bzip2-devel libffi-devel wget
+  - yum install -y rpm-build rpmdevtools nmap
+  - yum install -y zlib-devel python39-devel python39-pip
+  - yum install -y python39
+  - rpmdev-setuptree
+  - if grep -q "TEST_GUI" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/TEST_GUI/${YOUR_APP_NAME}/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - if grep -q "define version 1" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/define version 1/define version ${MAJ_VERSION}/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - if grep -q "define release 1" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/define release 1/define release ${MIN_VERSION}.$(date +%Y%m%d%H)/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - if grep -q "define app test_gui" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; then sed -i "s/define app test_gui/define app ${YOUR_APP_COMMAND}/" $CI_PROJECT_DIR/rpmbuild/rhelhostinfo.spec; fi
+  - python3 -m pip install --upgrade pip wheel
+  #- python3 -m pip install --upgrade python-dev-tools
+  - python3 -m pip install --upgrade -r requirements.txt
+  # recursive copy may be easier for your project, or just copy over the application files...
+  - cp -R $CI_PROJECT_DIR/* /root/rpmbuild/SOURCES/
+  - rm -rf /root/rpmbuild/SOURCES/sast
+  - rm -rf /root/rpmbuild/SOURCES/pytest
+  script:
+    - rpmbuild -bb -vv --clean /root/rpmbuild/SOURCES/rpmbuild/rhelhostinfo.spec --define "_rpmdir $CI_PROJECT_DIR/current_rpms/"
+  artifacts:
+    when: on_success
+    paths:
+      - $CI_PROJECT_DIR/current_rpms/x86_64/${YOUR_APP_NAME}-${MAJ_VERSION}-${MIN_VERSION}.$(date +%Y%m%d%H).el8.x86_64.rpm
+    expire_in: 1 day
+  only:
+    - triggers
+    - schedules
+  needs:
+    - black
+    - bandit_failure_test
+    - pytest_test_code
+    - shellcheck_failure_test
+
+update_repo:
+  stage: commit
+  script:
+  - git config --global user.email "${GITLAB_USER_EMAIL}"
+  - git config --global user.name "${GITLAB_USER_NAME}"
+  - git add $CI_PROJECT_DIR/sast/bandit_improvements.txt
+  - git add $CI_PROJECT_DIR/sast/flake8_improvements.txt
+  - git add $CI_PROJECT_DIR/sast/pytest_improvements.txt
+  - git add $CI_PROJECT_DIR/sast/report.xml
+  - git add $CI_PROJECT_DIR/sast/shellcheck.txt
+  #- git add $CI_PROJECT_DIR/sast/black.txt
+  - if grep -v "$(date +%Y%m)"; then $(find $CI_PROJECT_DIR/current_rpms/x86_64/ -maxdepth 1 | grep -v "$(date +%Y%m)" | xargs git rm -r); fi
+  - git add $CI_PROJECT_DIR/current_rpms/x86_64/${YOUR_APP_NAME}-${MAJ_VERSION}-${MIN_VERSION}.$(date +%Y%m%d%H).el7.x86_64.rpm
+  - git add $CI_PROJECT_DIR/current_rpms/x86_64/${YOUR_APP_NAME}-${MAJ_VERSION}-${MIN_VERSION}.$(date +%Y%m%d%H).el8.x86_64.rpm
+  - git add $CI_PROJECT_DIR/*.py
+  - git add $CI_PROJECT_DIR/app/*.py
+  - git commit -m "Adding v${MAJ_VERSION}.${MIN_VERSION} - SAST docs, rpm and reformatted files via black from $CI_COMMIT_SHORT_SHA [skip ci]" || echo "No changes, nothing to commit!"
+  - git push https://CI_ACCESS_TOKEN:${CI_TOKEN_PASS}@${YOUR_GIT_REPO} HEAD:"${CI_COMMIT_REF_NAME}"
+  only:
+    - triggers
+    - schedules
+  needs:
+    - bandit
+    - flake8
+    - pytest_reports
+    - pytest_output
+    - shellcheck
+    - rpmbuild_latest_8
+    - rpmbuild_7.9
