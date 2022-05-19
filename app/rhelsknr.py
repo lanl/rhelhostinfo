@@ -214,6 +214,8 @@ class Scanner(State):
     def write_json_to_file(self, file_name: str, scan_dict: dict):
         """easy method to write a list of dicts to a file as json """
         if os.path.exists(file_name):
+            if os.path.exists(f"{file_name}.old"):
+                os.remove(f"{file_name}.old")
             shutil.copy(file_name, f"{file_name}.old")
         with open(os.open(file_name, os.O_CREAT | os.O_WRONLY, 0o600), "w+") as outfile:
             json.dump(scan_dict, outfile)
@@ -221,6 +223,8 @@ class Scanner(State):
     def write_json_to_file_as_str(self, file_name: str, scan_dict: dict):
         """easy method to write a list of dicts to a file as a json string"""
         if os.path.exists(file_name):
+            if os.path.exists(f"{file_name}.old"):
+                os.remove(f"{file_name}.old")
             shutil.copy(file_name, f"{file_name}.old")
         with open(os.open(file_name, os.O_CREAT | os.O_WRONLY, 0o600), "w+") as outfile:
             json_data = json.dumps(scan_dict, skipkeys=True)
