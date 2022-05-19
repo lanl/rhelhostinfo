@@ -1,5 +1,6 @@
 #!/bin/env/python3
 # rhelhostinfo.py: host state configuration enumeration
+
 # Import statements for all standard libraries
 import subprocess
 from datetime import date
@@ -97,6 +98,9 @@ class RhelHostInfo(State):
         search_list = ["sync", "shutdown", "halt", "root"]
         for user in self.user_accounts:
             if user not in search_list:
+                if not self.ldap_dc_name:
+                    print(f"Could not look up user {user} in ldap / need to configure ldap variables in rhelhostinfo.py")
+                    continue
                 check_user_cmd = f"ldapsearch -x -h dir1 -b {self.ldap_dc_name} uid={user}"
                 user_data = subprocess.check_output(
                         [check_user_cmd], shell=True
@@ -296,6 +300,10 @@ class RhelHostInfo(State):
 
     # Define the Host's property number and owner
     def propinfo(self):
+        if not self.ldap_server:
+            msg = f"Could not look up host owner or host property information in ldap / need to configure ldap variables in rhelhostinfo.py"
+            print(msg)
+            return msg
         try:
             host_info_cmd = f"/bin/ldapsearch -x -h {self.ldap_server} -s one -b '{self.ldap_ou_name},{self.ldap_dc_name}' '({self.ldap_ip_name}={self.ipaddrpri})'"
             host_obj = subprocess.Popen(
