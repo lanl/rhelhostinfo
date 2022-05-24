@@ -41,10 +41,8 @@ jobs:
 
       - name: setup environment
         run: |
-            #mkdir -p $GITHUB_WORKSPACE/rpmbuild/SOURCES $GITHUB_WORKSPACE/rpmbuild/SPECS
             python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib cairocffi tornado 
             python3 -m pip install --upgrade -r requirements.txt
-            #cp -R $GITHUB_WORKSPACE/* $GITHUB_WORKSPACE/rpmbuild/SOURCES/
             rm -rf $GITHUB_WORKSPACE/sast
             rm -rf $GITHUB_WORKSPACE/pytest
   
@@ -61,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           name: ${{ env.YOUR_APP_NAME }}-${{ env.MAJ_VERSION }}-${{ env.MIN_VERSION }}
-          path: $GITHUB_WORKSPACE/current_rpms/
+          path: current_rpms/
       
       - name: upload notification
         run: echo "rpm uploaded as an artifact"
