@@ -1,0 +1,76 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build and Test RPM
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+env:
+  MAJ_VERSION: "1"
+  MIN_VERSION: "0"
+  YOUR_APP_NAME: "rhelhostinfo"
+  YOUR_APP_COMMAND: "rhelhostinfo"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: 'centos:centos7'
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: setup notification
+        run: echo "starting setup"
+
+      - name: setup
+        run: |
+            yum install -y wget openssl-devel bzip2-devel libffi-devel gcc python3-devel gobject-introspection-devel cairo-gobject-devel upx
+            yum groupinstall -y "Development Tools"
+            yum install -y zlib-devel libcmocka-devel sqlite-devel
+            yum install -y rpm-build rpmdevtools openssl-devel freetype-devel nmap
+            yum install -y rh-python38
+            source /opt/rh/rh-python38/enable
+            yum update -y
+            rpmdev-setuptree
+            if grep -q "TEST_GUI" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/TEST_GUI/${{ env.YOUR_APP_NAME }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
+            if grep -q "define version 1" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/define version 1/define version ${{ env.MAJ_VERSION }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
+            if grep -q "define release 1" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/define release 1/define release ${{ env.MIN_VERSION }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
+            if grep -q "define app test_gui" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/define app test_gui/define app ${{ env.YOUR_APP_COMMAND }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
+            /usr/local/bin/python3.9 -m venv venv
+            source venv/bin/activate
+            python3 -m pip install --upgrade pip 
+            python3 -m pip install --upgrade wheel
+            python3 -m pip install --upgrade setuptools python-dev-tools xcffib
+            python3 -m pip install cairocffi tornado 
+            python3 -m pip install --upgrade -r requirements.txt
+            cp -R $GITHUB_WORKSPACE/* /root/rpmbuild/SOURCES/
+            rm -rf /root/rpmbuild/SOURCES/sast
+            rm -rf /root/rpmbuild/SOURCES/pytest
+  
+      - name: build notification
+        run: echo "starting build"
+ 
+      - name: build
+        run: rpmbuild -bb -vv --clean /root/rpmbuild/SOURCES/rpmbuild/rhelhostinfo.spec --define "_rpmdir $GITHUB_WORKSPACE/current_rpms/"
+            
+      - name: artifact notification
+        run: echo "starting artifact upload"
+            
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: ${{ env.YOUR_APP_NAME }}-${{ env.MAJ_VERSION }}-${{ env.MIN_VERSION }}
+          path: $GITHUB_WORKSPACE/current_rpms/
+      
+      - name: upload notification
+        run: echo "rpm uploaded as an artifact"
+            
