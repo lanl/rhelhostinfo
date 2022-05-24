@@ -39,7 +39,7 @@ jobs:
 
       - name: setup environment
         run: |
-            python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib cairocffi tornado 
+            python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib tornado 
             python3 -m pip install --upgrade -r requirements.txt
             rm -rf $GITHUB_WORKSPACE/sast
             rm -rf $GITHUB_WORKSPACE/pytest
@@ -75,7 +75,7 @@ jobs:
       - name: Install packages
         run: |
             yum -y install wget upx nmap rpm gcc
-            yum groupinstall "Development Tools"
+            yum -y groupinstall "Development Tools"
 
       - name: setup environment
         run: |
