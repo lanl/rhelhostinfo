@@ -34,7 +34,9 @@ Substitute in your organization's name for the profile variables in app/openscap
 </pre>
 
 ## Useage:
-1. Build and install an rpm / to run via the installed rpm:
+1. Use the latest rpm artifact to the [workflow](https://github.com/lanl/rhelhostinfo/actions/workflows/rpmbuild.yml) or for this repo and build your own rpm!
+2. Install the rpm 'rpm -Uvh <path_to_rpm>'
+3. To run via the installed rpm:
 `rhelhostinfo --help`
 <pre>
 usage: rhelhostinfo [options]
@@ -59,11 +61,11 @@ optional arguments:
 </pre>
 
 2. To run natively in python3:
-`yum install rh-python38`
-`python3 -m venv venv`
-`source venv/bin/activate`
-`python3 -m pip install --upgrade -r requirements.txt`
-`python3 main.py --help`
++ `yum install rh-python38`
++ `python3 -m venv venv`
++ `source venv/bin/activate`
++ `python3 -m pip install --upgrade -r requirements.txt`
++ `python3 main.py --help`
 
 ## Project Tree:
 <pre>
@@ -106,7 +108,7 @@ optional arguments:
 │   ├── rhel7-rhev-tailoring.xml
 │   ├── rhel8-gui-tailoring.xml
 │   └── rhel8-no-gui-tailoring.xml
-└──SBOM.md
+└──Software_Bill_of_Materials.md
 </pre>
 2. To run natively in python3:
 + `yum install rh-python38`
