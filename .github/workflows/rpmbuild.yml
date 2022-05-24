@@ -79,7 +79,7 @@ jobs:
 
       - name: setup environment
         run: |
-            wget https://www.python.org/ftp/python/3.9.5/Python-3.9.12.tgz
+            wget https://www.python.org/ftp/python/3.9.12/Python-3.9.12.tgz
             tar xvf Python-3.9.12.tgz
             cd Python-3.9*/
             ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" --enable-loadable-sqlite-extensions
