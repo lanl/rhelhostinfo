@@ -36,13 +36,13 @@ jobs:
         
       - name: Install packages
         run: |
-            sudo apt-get -y install wget openssl-devel bzip2-devel libffi-devel gcc python3-devel gobject-introspection-devel cairo-gobject-devel upx zlib-devel libcmocka-devel sqlite-devel rpm-build rpmdevtools openssl-devel freetype-devel nmap
-            which tree
+            sudo apt-get -y install wget upx nmap rpm rpmbuild rpmdevtools
+            python3 -V
 
       - name: setup
         run: |
             mkdir -p $GITHUB_WORKSPACE/rpmbuild/SOURCES $GITHUB_WORKSPACE/rpmbuild/SPECS
-            sudo rpmdev-setuptree
+            rpmdev-setuptree
             python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib cairocffi tornado 
             python3 -m pip install --upgrade -r requirements.txt
             cp -R $GITHUB_WORKSPACE/* $GITHUB_WORKSPACE/rpmbuild/SOURCES/
@@ -53,7 +53,7 @@ jobs:
         run: echo "starting build"
  
       - name: build
-        run: sudo rpmbuild -bb -vv --clean $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec --define "_rpmdir $GITHUB_WORKSPACE/current_rpms/"
+        run: rpmbuild -bb -vv --clean $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec --define "_rpmdir $GITHUB_WORKSPACE/current_rpms/"
             
       - name: artifact notification
         run: echo "starting artifact upload"
