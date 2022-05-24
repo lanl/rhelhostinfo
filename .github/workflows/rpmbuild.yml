@@ -22,7 +22,7 @@ env:
 jobs:
   build_for_rhel8:
     runs-on: ubuntu-latest
-    container: centos:centos8
+    container: rockylinux:latest
     steps:
       - uses: actions/checkout@v3 # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/setup-python@v2 # sets up python per the version below
@@ -82,6 +82,14 @@ jobs:
 
       - name: setup environment
         run: |
+            wget https://www.python.org/ftp/python/3.9.5/Python-3.9.5.tgz
+            tar xvf Python-3.9.5.tgz
+            cd Python-3.9*/
+            ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" --enable-loadable-sqlite-extensions
+            make altinstall
+            cd $GITHUB_WORKSPACE
+            alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.9 3
+            alternatives --set python3 /usr/local/bin/python3.9
             python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib cairocffi tornado 
             python3 -m pip install --upgrade -r requirements.txt
             rm -rf $GITHUB_WORKSPACE/sast
