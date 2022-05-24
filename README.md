@@ -132,4 +132,3 @@ optional arguments:
 7. Test remediation option tailoring
 8. Add scan types and subnet as sub-args for the scan option
 9. Consider potential for incorporating PEASS: https://github.com/carlospolop/PEASS-ng/tree/master/linPEAS
-10. Build a GitHub Actions pipeline to mirror the gitlab-ci.yml
