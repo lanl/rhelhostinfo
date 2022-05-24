@@ -22,7 +22,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: 'centos:centos7'
+    container: 'centos/python-38-centos7'
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -43,7 +43,7 @@ jobs:
             if grep -q "define version 1" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/define version 1/define version ${{ env.MAJ_VERSION }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
             if grep -q "define release 1" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/define release 1/define release ${{ env.MIN_VERSION }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
             if grep -q "define app test_gui" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/define app test_gui/define app ${{ env.YOUR_APP_COMMAND }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
-            /usr/local/bin/python3.9 -m venv venv
+            /usr/local/bin/python3 -m venv venv
             source venv/bin/activate
             python3 -m pip install --upgrade pip 
             python3 -m pip install --upgrade wheel
