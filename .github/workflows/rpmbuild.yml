@@ -15,15 +15,54 @@ on:
   
 env:
   MAJ_VERSION: "1"
-  MIN_VERSION: "0"
+  MIN_VERSION: "1"
   YOUR_APP_NAME: "rhelhostinfo"
   YOUR_APP_COMMAND: "rhelhostinfo"
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    #container: 'centos:centos7'
+  build_for_rhel8:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3 # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/setup-python@v2 # sets up python per the version below
+        with:
+          python-version: 3.9
 
+      - name: setup notification
+        run: echo "starting setup"
+        
+      - name: Install packages
+        run: |
+            sudo apt-get -y install wget upx nmap rpm
+            python3 -V
+
+      - name: setup environment
+        run: |
+            python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib cairocffi tornado 
+            python3 -m pip install --upgrade -r requirements.txt
+            rm -rf $GITHUB_WORKSPACE/sast
+            rm -rf $GITHUB_WORKSPACE/pytest
+  
+      - name: build notification
+        run: echo "starting rpm build"
+ 
+      - name: build
+        run: rpmbuild -bb -vv --clean $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec --define "_rpmdir $GITHUB_WORKSPACE/current_rpms/" --define "_sourcedir $GITHUB_WORKSPACE"
+            
+      - name: artifact notification
+        run: echo "starting artifact upload"
+            
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: ${{ env.YOUR_APP_NAME }}-${{ env.MAJ_VERSION }}-${{ env.MIN_VERSION }}.el8.rpm
+          path: current_rpms/
+      
+      - name: upload notification
+        run: echo "rpm for RHEL8 uploaded as an artifact"
+        
+  build_for_rhel7:
+    runs-on: ubuntu-18.04
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
@@ -47,7 +86,7 @@ jobs:
             rm -rf $GITHUB_WORKSPACE/pytest
   
       - name: build notification
-        run: echo "starting build"
+        run: echo "starting rpm build"
  
       - name: build
         run: rpmbuild -bb -vv --clean $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec --define "_rpmdir $GITHUB_WORKSPACE/current_rpms/" --define "_sourcedir $GITHUB_WORKSPACE"
@@ -58,9 +97,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: ${{ env.YOUR_APP_NAME }}-${{ env.MAJ_VERSION }}-${{ env.MIN_VERSION }}.rpm
+          name: ${{ env.YOUR_APP_NAME }}-${{ env.MAJ_VERSION }}-${{ env.MIN_VERSION }}.el7.rpm
           path: current_rpms/
       
       - name: upload notification
-        run: echo "rpm uploaded as an artifact"
-            
+        run: echo "rpm for RHEL7 uploaded as an artifact"
