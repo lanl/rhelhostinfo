@@ -34,7 +34,8 @@ jobs:
         
       - name: Install packages
         run: |
-            yum -y install wget upx nmap rpm
+            yum makecache --refresh
+            yum -y install wget nmap rpm upx
             python3 -V
 
       - name: setup environment
@@ -68,9 +69,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
 
       - name: setup notification
         run: echo "starting setup"
