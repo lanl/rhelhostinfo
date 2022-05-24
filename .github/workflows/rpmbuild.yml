@@ -35,7 +35,7 @@ jobs:
       - name: Install packages
         run: |
             yum makecache --refresh
-            yum -y install wget nmap rpm python39
+            yum -y install wget nmap rpm python39 rpm-build
 
       - name: setup environment
         run: |
@@ -74,7 +74,7 @@ jobs:
         
       - name: Install packages
         run: |
-            yum -y install wget upx nmap rpm gcc
+            yum -y install wget upx nmap rpm gcc zlib-devel rpm-build
             yum -y groupinstall "Development Tools"
 
       - name: setup environment
