@@ -34,7 +34,7 @@ Substitute in your organization's name for the profile variables in app/openscap
 </pre>
 
 ## Useage:
-1. Use the latest rpm artifact to the [workflow](https://github.com/lanl/rhelhostinfo/actions/workflows/rpmbuild.yml) or for this repo and build your own rpm!
+1. Use the latest rpm artifact to the [workflow](https://github.com/lanl/rhelhostinfo/actions/workflows/rpmbuild.yml) or fork this repo and build your own rpm!
 2. Install the rpm 'rpm -Uvh <path_to_rpm>'
 3. To run via the installed rpm:
 `rhelhostinfo --help`
