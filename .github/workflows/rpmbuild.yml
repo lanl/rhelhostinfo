@@ -37,8 +37,6 @@ jobs:
             yum groupinstall -y "Development Tools"
             yum install -y zlib-devel libcmocka-devel sqlite-devel
             yum install -y rpm-build rpmdevtools openssl-devel freetype-devel nmap
-            yum install -y rh-python38
-            source /opt/rh/rh-python38/enable
             yum update -y
             rpmdev-setuptree
             if grep -q "TEST_GUI" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; then sed -i "s/TEST_GUI/${{ env.YOUR_APP_NAME }}/" $GITHUB_WORKSPACE/rpmbuild/rhelhostinfo.spec; fi
