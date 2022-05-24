@@ -74,7 +74,7 @@ jobs:
         
       - name: Install packages
         run: |
-            yum -y install wget upx nmap rpm gcc zlib-devel rpm-build openssl-devel
+            yum -y install wget upx nmap rpm gcc zlib-devel rpm-build openssl-devel python3-devel
             yum -y groupinstall "Development Tools"
 
       - name: setup environment
