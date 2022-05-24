@@ -35,7 +35,7 @@ jobs:
       - name: Install packages
         run: |
             yum makecache --refresh
-            yum -y install wget nmap rpm upx
+            yum -y install wget nmap rpm
             python3 -V
 
       - name: setup environment
@@ -76,7 +76,6 @@ jobs:
       - name: Install packages
         run: |
             yum -y install wget upx nmap rpm
-            python3 -V
 
       - name: setup environment
         run: |
