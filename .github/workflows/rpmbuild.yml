@@ -39,10 +39,9 @@ jobs:
             sudo apt-get -y install wget upx nmap rpm
             python3 -V
 
-      - name: setup
+      - name: setup environment
         run: |
             mkdir -p $GITHUB_WORKSPACE/rpmbuild/SOURCES $GITHUB_WORKSPACE/rpmbuild/SPECS
-            rpmdev-setuptree
             python3 -m pip install --upgrade pip wheel setuptools python-dev-tools xcffib cairocffi tornado 
             python3 -m pip install --upgrade -r requirements.txt
             cp -R $GITHUB_WORKSPACE/* $GITHUB_WORKSPACE/rpmbuild/SOURCES/
